@@ -3,7 +3,7 @@
  * Plugin Name: Beaver Builder Colour Picker Presets Override
  * Plugin URI:  https://github.com/weavedigital/bb-color-picker-override
  * Description: Makes color presets visible first by default in Beaver Builder's color picker to streamline your development workflow. Updated for Beaver Builder 2.9+
- * Version:     2.0.0
+ * Version:     2.0.0-beta
  * Author:     Weave Digital Studio, Gareth Bissland
  * Author URI:  https://weave.co.nz
  * License:     GPL-2.0+
