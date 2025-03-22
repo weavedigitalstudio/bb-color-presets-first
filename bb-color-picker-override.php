@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: BB Color Presets First
- * Plugin URI:  https://github.com/weavedigital/bb-color-picker-override
+ * Plugin URI:  https://github.com/weavedigital/bb-color-presets-first
  * Description: Speeds up site building by making Beaver Builder's colour presets tab the default in both classic (<2.9) and the new React-based color pickers (BB 2.9+).
- * Version:     1.1.0-beta.2
+ * Version:     1.1.0
  * Author:     Weave Digital Studio, Gareth Bissland
  * Author URI:  https://weave.co.nz
  * License:     GPL-2.0+
@@ -15,7 +15,7 @@
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
 /**
@@ -182,3 +182,42 @@ function bb_color_picker_activate_react_presets() {
 // Add to both footer locations with high priority
 add_action( 'wp_footer', 'bb_color_picker_activate_react_presets', 999 );
 add_action( 'admin_footer', 'bb_color_picker_activate_react_presets', 999 );
+
+/**
+ * Enqueue CSS to hide color palette add button in Beaver Builder
+ * 
+ * This feature prevents users from adding custom colors and forces them to use only
+ * the predefined color palettes (e.g., Global Colors in Beaver Builder or GeneratePress).
+ * 
+ * If you want to allow users to add colors via the color picker instead of
+ * requiring them to use the BB Global color settings panel, comment out this
+ * function or remove the action hooks at the bottom.
+ */
+function bb_color_presets_restrict_color_palette() {
+    // Only continue if Beaver Builder exists and is active
+    if (!class_exists('FLBuilderModel') || !FLBuilderModel::is_builder_active()) {
+        return;
+    }
+
+    // CSS to hide undesired elements
+    $css = '
+        /* Hide the legacy color picker add/remove buttons */
+        .fl-color-picker-ui .fl-color-picker-preset-add,
+        .fl-color-picker-ui .fl-color-picker-presets-list .fl-color-picker-preset-remove,
+        
+        /* Hide the "Saved Colors" section completely */
+        .fl-controls-swatch-group.fl-appearance-swatches,
+        
+        /* Hide the add color button in the toolbar */
+        .fl-color-picker-toolbar > div:last-child > button {
+            display: none !important;
+        }
+    ';
+    
+    // Add directly to avoid any stylesheet loading issues
+    echo '<style id="bb-color-presets-restrict">' . $css . '</style>';
+}
+
+// Use wp_footer for frontend builder and admin_footer for admin panel
+add_action('wp_footer', 'bb_color_presets_restrict_color_palette', 100);
+add_action('admin_footer', 'bb_color_presets_restrict_color_palette', 100);
