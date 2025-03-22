@@ -1,0 +1,59 @@
+name: Build Plugin Release
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer
+      
+      # Uncomment if you have Composer dependencies
+      # - name: Install dependencies
+      #   run: composer install --no-dev --optimize-autoloader
+      
+      - name: Create build directory
+        run: mkdir -p build/bb-color-presets-first
+      
+      - name: Copy plugin files to build directory
+        run: |
+          rsync -av --exclude='.git' \
+                  --exclude='.github' \
+                  --exclude='build' \
+                  --exclude='.gitignore' \
+                  --exclude='README.md' \
+                  --exclude='CHANGELOG.md' \
+                  --exclude='composer.json' \
+                  --exclude='composer.lock' \
+                  --exclude='.DS_Store' \
+                  --exclude='.nova' \
+                  --exclude='node_modules' \
+                  --exclude='package.json' \
+                  --exclude='package-lock.json' \
+                  --exclude='phpcs.xml' \
+                  --exclude='phpunit.xml' \
+                  --exclude='tests' \
+                  . build/bb-color-presets-first/
+      
+      - name: Create zip file
+        run: cd build && zip -r bb-color-presets-first-${{ env.VERSION }}.zip bb-color-presets-first
+      
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/bb-color-presets-first-${{ env.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
