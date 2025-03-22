@@ -13,6 +13,8 @@ It's a simple plugin which overrides Beaver Builder's colour picker behaviour, m
 
 The plugin automatically detects which version of Beaver Builder you're using and applies the appropriate method.
 
+> **GeneratePress Users:** If you develop with GeneratePress Theme Framework, you should instead use our [GP Beaver Integration](https://github.com/weavedigitalstudio/gp-beaver-integration) plugin which includes this functionality plus a full sync of the GeneratePress Global Colors into Beaver Builder.
+
 ---
 
 ### Manual Installation  
