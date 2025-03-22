@@ -8,14 +8,22 @@
  * Author URI:  https://weave.co.nz
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain: bb-color-picker-presets
+ * Text Domain: bb-color-presets-first
  * Requires at least: 5.0
  * Requires PHP: 7.2
  */
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
+}
+
+// Include GitHub updater
+require_once plugin_dir_path(__FILE__) . 'includes/github-updater.php';
+
+// Initialize the GitHub updater
+if (class_exists('BBCPF_GitHub_Updater')) {
+    BBCPF_GitHub_Updater::init(__FILE__);
 }
 
 /**
