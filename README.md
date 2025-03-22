@@ -51,7 +51,7 @@ If you want to allow users to add custom colors, you can either:
 ## Change Log
 
 ### 1.1.0
-- Added compatibility with Beaver Builder 2.9+ and its React-based color picker
+- Updated for Beaver Builder 2.9+ and its React-based color picker
 - Improved version detection to load the appropriate script
 - Updated documentation
 
