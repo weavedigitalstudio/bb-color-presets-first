@@ -3,28 +3,31 @@
  * Plugin Name: BB Color Presets First
  * Plugin URI:  https://github.com/weavedigital/bb-color-presets-first
  * Description: Speeds up site building by making Beaver Builder's colour presets tab the default in both classic (<2.9) and the new React-based color pickers (BB 2.9+).
- * Version:     1.1.0
+ * Version:     1.1.1
  * Author:     Weave Digital Studio, Gareth Bissland
  * Author URI:  https://weave.co.nz
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain: bb-color-presets-first
+ * Text Domain: bb-color-picker-presets
  * Requires at least: 5.0
  * Requires PHP: 7.2
  */
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
-// Include GitHub updater
-require_once plugin_dir_path(__FILE__) . 'includes/github-updater.php';
-
-// Initialize the GitHub updater
-if (class_exists('BBCPF_GitHub_Updater')) {
-    BBCPF_GitHub_Updater::init(__FILE__);
+/**
+ * Initialize GitHub updater if we're in admin
+ */
+function bb_color_presets_init_github_updater() {
+    if (is_admin() && file_exists(plugin_dir_path(__FILE__) . 'includes/github-updater.php')) {
+        require_once plugin_dir_path(__FILE__) . 'includes/github-updater.php';
+        BBCPF_GitHub_Updater::init(__FILE__);
+    }
 }
+add_action('init', 'bb_color_presets_init_github_updater');
 
 /**
  * Detect Beaver Builder version to determine which script to load
@@ -63,7 +66,7 @@ function bb_color_picker_override_enqueue_classic_script() {
         'bb-color-picker-override', 
         plugin_dir_url( __FILE__ ) . 'js/override-color-picker.js',
         ['jquery'], 
-        '1.1.0',
+        '1.1.1',
         true 
     );
 }
