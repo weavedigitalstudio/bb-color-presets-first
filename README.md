@@ -15,7 +15,7 @@ The plugin automatically detects which version of Beaver Builder you're using an
 
 ## Installation from GitHub
 When installing this plugin from GitHub:
-1. Go to the [Releases](https://github.com/weavedigital/bb-color-presets-first/releases) page
+1. Go to the [Releases](https://github.com/weavedigitalstudio/bb-color-presets-first/releases) page
 2. Download the latest release ZIP file
 3. Extract the ZIP file on your computer
 4. Rename the extracted folder to remove the version number  
