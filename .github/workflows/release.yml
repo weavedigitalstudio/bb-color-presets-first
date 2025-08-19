@@ -34,7 +34,6 @@ jobs:
                   --exclude='.github' \
                   --exclude='build' \
                   --exclude='.gitignore' \
-                  --exclude='README.md' \
                   --exclude='CHANGELOG.md' \
                   --exclude='composer.json' \
                   --exclude='composer.lock' \
