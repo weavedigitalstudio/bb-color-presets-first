@@ -4,7 +4,7 @@
  *
  * @package    BB_Color_Presets_First
  * @subpackage Updates
- * @version    1.0.0
+ * @version    1.1.0
  */
 
 // Exit if accessed directly
@@ -17,8 +17,14 @@ class BBCPF_GitHub_Updater {
     private $plugin;
     private $basename;
     private $github_response;
-    private $github_username = "weavedigital";
     private $github_repo = "bb-color-presets-first";
+    
+    // Support both old and new GitHub usernames for backward compatibility
+    private $github_usernames = [
+        "weavedigitalstudio",  // Current username (try first)
+        "weavedigital"         // Legacy username (fallback)
+    ];
+    private $active_username = null; // Track which username worked
 
     // Plugin icons
     private const ICON_SMALL = "https://weave-hk-github.b-cdn.net/weave/icon-128x128.png";
@@ -26,6 +32,7 @@ class BBCPF_GitHub_Updater {
     
     // Cache keys and durations
     private const CACHE_KEY = 'bbcpf_github_response';
+    private const CACHE_USERNAME_KEY = 'bbcpf_github_username'; // Cache the working username
     private const CACHE_DURATION = 4; // Hours
     private const ERROR_CACHE_DURATION = 1; // Hour for error responses
 
@@ -37,6 +44,13 @@ class BBCPF_GitHub_Updater {
     public function __construct($file) {
         $this->file = $file;
         $this->basename = plugin_basename($file);
+
+        // Check if we have a cached working username
+        $cached_username = get_transient(self::CACHE_USERNAME_KEY);
+        if ($cached_username && in_array($cached_username, $this->github_usernames)) {
+            // Put the cached username first in the array for efficiency
+            $this->github_usernames = array_unique(array_merge([$cached_username], $this->github_usernames));
+        }
 
         // Hook into the WordPress update system
         add_filter("pre_set_site_transient_update_plugins", [$this, "check_update"]);
@@ -85,7 +99,70 @@ class BBCPF_GitHub_Updater {
     }
 
     /**
-     * Get repository information from GitHub with caching
+     * Try to fetch repository info from a specific GitHub username
+     * 
+     * @param string $username GitHub username to try
+     * @return object|false Repository info or false on failure
+     */
+    private function fetch_from_github($username) {
+        $request_uri = sprintf(
+            "https://api.github.com/repos/%s/%s/releases/latest",
+            $username,
+            $this->github_repo
+        );
+
+        $args = [
+            'headers' => [
+                'User-Agent' => 'WordPress/' . get_bloginfo('version'),
+            ],
+            'timeout' => 10 // Add timeout to prevent hanging
+        ];
+
+        $response = wp_remote_get($request_uri, $args);
+
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("GitHub API request failed for {$username}: " . $response->get_error_message());
+            }
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("GitHub API request failed for {$username} with response code: " . $response_code);
+            }
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response));
+
+        if (!isset($body->tag_name, $body->assets) || empty($body->assets)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("GitHub API response for {$username} missing required fields or assets.");
+            }
+            return false;
+        }
+
+        // Fetch the actual zip file URL
+        $body->zipball_url = $body->assets[0]->browser_download_url ?? '';
+
+        if (empty($body->zipball_url)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("No valid download URL found for {$username}.");
+            }
+            return false;
+        }
+
+        // Success! Cache the working username
+        $this->active_username = $username;
+        set_transient(self::CACHE_USERNAME_KEY, $username, WEEK_IN_SECONDS);
+
+        return $body;
+    }
+
+    /**
+     * Get repository information from GitHub with caching and fallback
      * 
      * @return object|false Repository info or false on failure
      */
@@ -97,67 +174,39 @@ class BBCPF_GitHub_Updater {
         // Check for a cached response
         $cached = get_transient(self::CACHE_KEY);
         if (false !== $cached) {
-            // Check if this is an error response (we store errors as an array with status key)
+            // Check if this is an error response
             if (is_array($cached) && isset($cached['status']) && $cached['status'] === 'error') {
-                return false; // Return false but don't make a new request
+                return false;
             }
             
             $this->github_response = $cached;
             return $this->github_response;
         }
 
-        $request_uri = sprintf(
-            "https://api.github.com/repos/%s/%s/releases/latest",
-            $this->github_username,
-            $this->github_repo
-        );
-
-        $args = [
-            'headers' => [
-                'User-Agent' => 'WordPress/' . get_bloginfo('version'),
-            ]
-        ];
-
-        $response = wp_remote_get($request_uri, $args);
-
-        if (is_wp_error($response)) {
-            error_log("GitHub API request failed: " . $response->get_error_message());
-            // Cache error response to prevent constant retries
-            set_transient(self::CACHE_KEY, ['status' => 'error'], self::ERROR_CACHE_DURATION * HOUR_IN_SECONDS);
-            return false;
+        // Try each GitHub username until one works
+        foreach ($this->github_usernames as $username) {
+            $body = $this->fetch_from_github($username);
+            
+            if ($body !== false) {
+                // Cache the successful response
+                set_transient(self::CACHE_KEY, $body, self::CACHE_DURATION * HOUR_IN_SECONDS);
+                $this->github_response = $body;
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("BBCPF GitHub Updater: Successfully fetched from {$username}");
+                }
+                
+                return $this->github_response;
+            }
         }
 
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            error_log("GitHub API request failed with response code: " . $response_code);
-            // Cache error response to prevent constant retries
-            set_transient(self::CACHE_KEY, ['status' => 'error'], self::ERROR_CACHE_DURATION * HOUR_IN_SECONDS);
-            return false;
+        // All attempts failed - cache error to prevent constant retries
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("BBCPF GitHub Updater: Failed to fetch from any GitHub username");
         }
-
-        $body = json_decode(wp_remote_retrieve_body($response));
-
-        if (!isset($body->tag_name, $body->assets) || empty($body->assets)) {
-            error_log("GitHub API response missing required fields or assets.");
-            // Cache error response to prevent constant retries
-            set_transient(self::CACHE_KEY, ['status' => 'error'], self::ERROR_CACHE_DURATION * HOUR_IN_SECONDS);
-            return false;
-        }
-
-        // Fetch the actual zip file URL
-        $body->zipball_url = $body->assets[0]->browser_download_url ?? '';
-
-        if (empty($body->zipball_url)) {
-            error_log("No valid download URL found for the latest release.");
-            // Cache error response to prevent constant retries
-            set_transient(self::CACHE_KEY, ['status' => 'error'], self::ERROR_CACHE_DURATION * HOUR_IN_SECONDS);
-            return false;
-        }
-
-        // Cache the successful response
-        set_transient(self::CACHE_KEY, $body, self::CACHE_DURATION * HOUR_IN_SECONDS);
-        $this->github_response = $body;
-        return $this->github_response;
+        set_transient(self::CACHE_KEY, ['status' => 'error'], self::ERROR_CACHE_DURATION * HOUR_IN_SECONDS);
+        
+        return false;
     }
 
     /**
@@ -288,8 +337,9 @@ class BBCPF_GitHub_Updater {
         $wp_filesystem->move($result["destination"], $install_directory);
         $result["destination"] = $install_directory;
         
-        // Clear the cache to force a fresh check
+        // Clear the caches to force a fresh check
         delete_transient(self::CACHE_KEY);
+        delete_transient(self::CACHE_USERNAME_KEY);
 
         return $result;
     }
