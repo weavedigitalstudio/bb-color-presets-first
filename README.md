@@ -54,6 +54,9 @@ If you want to allow users to add custom colors, you can either:
 
 ## Change Log
 
+### 1.1.2
+- Fixed incorrect url
+
 ### 1.1.1
 - Improved BB 2.9+ color picker integration with inline script
 - Removed unused JS files
