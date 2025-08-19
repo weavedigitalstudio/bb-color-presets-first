@@ -66,7 +66,7 @@ function bb_color_picker_override_enqueue_classic_script() {
         'bb-color-picker-override', 
         plugin_dir_url( __FILE__ ) . 'js/override-color-picker.js',
         ['jquery'], 
-        '1.1.1',
+        '1.1.2',
         true 
     );
 }
