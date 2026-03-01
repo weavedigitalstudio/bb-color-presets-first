@@ -243,10 +243,14 @@ class BBCPF_GitHub_Updater {
         // Only add to update response if GitHub version is strictly greater than current version
         if (version_compare($latest_version, $current_version_normalized, ">")) {
             $plugin = [
-                "slug" => dirname($this->basename),
-                "package" => $repository_info->zipball_url,
-                "new_version" => $latest_version,
-                "tested" => get_bloginfo("version"),
+                "slug"         => dirname($this->basename),
+                "plugin"       => $this->basename,
+                "package"      => $repository_info->zipball_url,
+                "new_version"  => $latest_version,
+                "url"          => "https://github.com/weavedigitalstudio/bb-color-presets-first",
+                "tested"       => get_bloginfo("version"),
+                "requires_php" => $plugin_data['RequiresPHP'] ?? '7.2',
+                "requires"     => $plugin_data['RequiresWP'] ?? '5.0',
                 "icons" => [
                     "1x" => self::ICON_SMALL,
                     "2x" => self::ICON_LARGE,
@@ -308,6 +312,8 @@ class BBCPF_GitHub_Updater {
         $info->author = $plugin_data["Author"] ?? "Weave Digital Studio, Gareth Bissland";
         $info->author_profile = $plugin_data["AuthorURI"] ?? "https://weave.co.nz";
         $info->tested = get_bloginfo("version");
+        $info->requires_php = $plugin_data['RequiresPHP'] ?? '7.2';
+        $info->requires = $plugin_data['RequiresWP'] ?? '5.0';
         $info->last_updated = $repository_info->published_at ?? "";
         $info->sections = [
             "description" => $plugin_data["Description"] ?? "Speeds up site building by making Beaver Builder's colour presets tab the default in both classic (<2.9) and the new React-based color pickers (BB 2.9+).",
@@ -323,20 +329,29 @@ class BBCPF_GitHub_Updater {
     }
 
     /**
-     * Handle plugin installation process
-     * 
+     * Rename the extracted directory to match the plugin's install directory.
+     *
+     * Only runs when this specific plugin is being updated. Without the
+     * $hook_extra check this would fire for every plugin install/update
+     * and corrupt other plugins' files.
+     *
      * @param bool|WP_Error $response Installation response
      * @param array $hook_extra Extra arguments
      * @param array $result Installation result data
      * @return array Modified result data
      */
     public function after_install($response, $hook_extra, $result) {
+        // Only act when *this* plugin is being updated.
+        if (!isset($hook_extra['plugin']) || $hook_extra['plugin'] !== $this->basename) {
+            return $result;
+        }
+
         global $wp_filesystem;
 
         $install_directory = plugin_dir_path($this->file);
         $wp_filesystem->move($result["destination"], $install_directory);
         $result["destination"] = $install_directory;
-        
+
         // Clear the caches to force a fresh check
         delete_transient(self::CACHE_KEY);
         delete_transient(self::CACHE_USERNAME_KEY);

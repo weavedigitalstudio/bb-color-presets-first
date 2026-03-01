@@ -54,8 +54,12 @@ If you want to allow users to add custom colors, you can either:
 
 ## Change Log
 
+### 1.1.3
+- Fixed updater running on all plugin updates instead of only this one (could corrupt other plugins)
+- Added missing metadata to update response (plugin key, requirements, URL)
+
 ### 1.1.2
-- Fixed incorrect url. If you had v1.1.1 you'll need to re-install for the auto updates to work. 
+- Fixed incorrect url. If you had v1.1.1 you'll need to re-install for the auto updates to work.
 
 ### 1.1.1
 - Improved BB 2.9+ color picker integration with inline script
