@@ -1,5 +1,7 @@
 # BB Color Presets First
 
+> ⚠️ **Heads up: Beaver Builder 2.11 adds this natively.** From BB 2.11, the core builder includes a setting at *Page Builder Settings → Advanced → Builder UI → "Color Picker: Default to Presets Tab"* that does the tab-defaulting this plugin provides, built right into the React color picker. Once you're on 2.11 (stable), you can enable that toggle and stop relying on this plugin for the "presets first" behaviour. This plugin still does one extra thing core does not: it hides the "add custom color" controls to lock sites to your Global Colors. We'll keep that part maintained. See the planned direction below.
+
 > **Why we released this:** We got tired of constantly clicking the BB color presets tab when building sites at Weave Digital Studio and HumanKind Funeral Websites. We wanted to set our client's brand indentity colours once at the beginning (using Generate Press Global Colours or BB Global colours) and access these quickly in Beaver Builder. **Plus,** it helps prevent clients from accidentally adding non-brand colors to their sites. This tiny plugin saves us countless clicks every day!
 
 It's a simple plugin which overrides Beaver Builder's colour picker behaviour, making your colour presets visible first by default instead of just the picker, streamlining your development workflow.
@@ -51,6 +53,16 @@ If you want to allow users to add custom colors, you can either:
 ## Requirements
 - WordPress
 - Beaver Builder (any version)
+
+## Planned Direction (BB 2.11+)
+
+Beaver Builder 2.11 ships a native "Color Picker: Default to Presets Tab" setting. Our plan:
+
+- **Retire the tab-defaulting JS.** The `MutationObserver` / click-the-tab approach is superseded by core. It can be replaced with a one-line filter that simply forces the core option on (`pre_option__fl_builder_default_presets_tab`).
+- **Keep the palette restriction.** Hiding the "add custom color" controls to enforce Global Colors is *not* part of core, so this stays.
+- **Re-verify the restriction CSS against 2.11's rebuilt React picker** before trusting the selectors.
+
+If you're on BB 2.11+, enable the core toggle. You only still need this plugin if you want the custom-color lockdown.
 
 ## Change Log
 

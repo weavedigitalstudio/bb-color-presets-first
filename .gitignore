@@ -47,3 +47,10 @@ wp-config.php
 # uncomment the next line
 #/wp-content/themes
 /.nova
+
+# macOS
+.DS_Store
+
+# Bundled third-party BB betas used only for local reference — never commit
+/bb-plugin-agency-beta/
+/bb-theme-builder-beta/
