@@ -264,21 +264,25 @@ class BBCPF_GitHub_Updater {
                 unset($transient->response[$this->basename]);
             }
             
-            // Add to the no_update list to show as "up to date"
-            if (!isset($transient->no_update[$this->basename])) {
-                $plugin = [
-                    "slug" => dirname($this->basename),
-                    "plugin" => $this->basename,
-                    "new_version" => $latest_version,
-                    "url" => "",
-                    "package" => "",
-                    "icons" => [
-                        "1x" => self::ICON_SMALL,
-                        "2x" => self::ICON_LARGE,
-                    ],
-                ];
-                $transient->no_update[$this->basename] = (object) $plugin;
-            }
+            /*
+             * Always write our own no_update entry, never only when one is
+             * missing. WordPress core populates no_update for every plugin it
+             * checked, and a core entry for a plugin it does not host carries
+             * none of our metadata, so a guarded write meant the icons and the
+             * rest never reached the Plugins screen.
+             */
+            $plugin = [
+                "slug" => dirname($this->basename),
+                "plugin" => $this->basename,
+                "new_version" => $latest_version,
+                "url" => "",
+                "package" => "",
+                "icons" => [
+                    "1x" => self::ICON_SMALL,
+                    "2x" => self::ICON_LARGE,
+                ],
+            ];
+            $transient->no_update[$this->basename] = (object) $plugin;
         }
 
         return $transient;

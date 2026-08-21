@@ -3,7 +3,7 @@
  * Plugin Name: BB Color Presets First
  * Plugin URI:  https://github.com/weavedigitalstudio/bb-color-presets-first
  * Description: Speeds up site building by making Beaver Builder's colour presets tab the default in both classic (<2.9) and the new React-based color pickers (BB 2.9+).
- * Version:     1.1.3
+ * Version:     1.1.4
  * Author:     Weave Digital Studio, Gareth Bissland
  * Author URI:  https://weave.co.nz
  * License:     GPL-2.0+
